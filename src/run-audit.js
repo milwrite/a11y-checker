@@ -4,11 +4,11 @@ const { Auditor } = require("./auditor");
 
 const url = process.argv[2];
 if (!url) {
-  console.error("Usage: node run-audit.js <url>");
+  console.error("Usage: node src/run-audit.js <url>");
   process.exit(1);
 }
 
-const outDir = process.argv[3] || path.join(__dirname, "docs", "results");
+const outDir = process.argv[3] || path.join(__dirname, "..", "docs", "results");
 fs.mkdirSync(outDir, { recursive: true });
 
 const auditor = new Auditor((event, data) => {
@@ -36,7 +36,6 @@ const auditor = new Auditor((event, data) => {
     fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
     console.log(`Report written to ${reportPath}`);
 
-    // Write index of all reports
     const indexPath = path.join(outDir, "index.json");
     let index = [];
     if (fs.existsSync(indexPath)) {
@@ -49,10 +48,8 @@ const auditor = new Auditor((event, data) => {
       totalViolations: report.totalViolations,
       file: `report-${Date.now()}.json`,
     });
-    // Keep last 20 reports
     index = index.slice(0, 20);
 
-    // Copy report with timestamped name
     fs.copyFileSync(reportPath, path.join(outDir, index[0].file));
     fs.writeFileSync(indexPath, JSON.stringify(index, null, 2));
     console.log(`Index updated: ${index.length} reports`);

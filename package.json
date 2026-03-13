@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "WCAG 2.1 AA accessibility auditor with real-time dashboard",
   "scripts": {
-    "start": "node server.js"
+    "start": "node src/server.js"
   },
   "dependencies": {
     "@axe-core/playwright": "^4.10.1",

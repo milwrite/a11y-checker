@@ -60,7 +60,6 @@ function runAudit(baseUrl) {
 const server = http.createServer((req, res) => {
   cors(res);
 
-  // Handle preflight
   if (req.method === "OPTIONS") {
     res.writeHead(204);
     res.end();
@@ -126,7 +125,7 @@ const server = http.createServer((req, res) => {
 
   if (req.url === "/" || req.url === "/index.html") {
     res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(fs.readFileSync(path.join(__dirname, "docs", "index.html")));
+    res.end(fs.readFileSync(path.join(__dirname, "..", "docs", "index.html")));
     return;
   }
 
