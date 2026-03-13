@@ -332,7 +332,7 @@
 
 </div>
 
-<iframe id="audit-frame" sandbox="allow-same-origin"></iframe>
+<iframe id="audit-frame" sandbox="allow-same-origin allow-scripts"></iframe>
 
 <script>
 const MAX_PAGES = 20;
@@ -552,26 +552,49 @@ function extractLinks(html, pageUrl, baseHost) {
 
 // --- axe-core auditing ---
 function auditHtml(html) {
-  return new Promise((resolve, reject) => {
-    frame.srcdoc = html;
+  return new Promise((resolve) => {
+    // Remove scripts from fetched HTML to prevent execution
+    const cleaned = html.replace(/<script[\s\S]*?<\/script>/gi, "");
+
+    frame.srcdoc = cleaned;
+
+    let settled = false;
+    function done(val) {
+      if (settled) return;
+      settled = true;
+      resolve(val);
+    }
+
     frame.onload = async () => {
       try {
-        const doc = frame.contentDocument;
-        if (!doc || !doc.body) { resolve([]); return; }
-        const results = await axe.run(doc, {
-          runOnly: {
-            type: "tag",
-            values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"],
-          },
-        });
-        resolve(results.violations);
+        // Inject axe-core into the iframe so it can inspect its own document
+        const iframeDoc = frame.contentDocument;
+        if (!iframeDoc || !iframeDoc.body) { done([]); return; }
+
+        const script = iframeDoc.createElement("script");
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.9.1/axe.min.js";
+        script.onload = async () => {
+          try {
+            const iframeAxe = frame.contentWindow.axe;
+            const results = await iframeAxe.run(iframeDoc, {
+              runOnly: {
+                type: "tag",
+                values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"],
+              },
+            });
+            done(results.violations);
+          } catch (err) {
+            done([]);
+          }
+        };
+        script.onerror = () => done([]);
+        iframeDoc.head.appendChild(script);
       } catch (err) {
-        reject(err);
+        done([]);
       }
     };
-    frame.onerror = () => resolve([]);
-    // Timeout fallback
-    setTimeout(() => resolve([]), 15000);
+    frame.onerror = () => done([]);
+    setTimeout(() => done([]), 20000);
   });
 }
 
