@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#56585d"/>
+      <stop offset="45%" stop-color="#2b2d32"/>
+      <stop offset="100%" stop-color="#08090c"/>
+    </radialGradient>
+    <radialGradient id="tileFill" cx="45%" cy="38%" r="80%">
+      <stop offset="0%" stop-color="#4f5259"/>
+      <stop offset="38%" stop-color="#23252a"/>
+      <stop offset="78%" stop-color="#0d0e12"/>
+      <stop offset="100%" stop-color="#050608"/>
+    </radialGradient>
+    <radialGradient id="arcGlow" cx="28%" cy="74%" r="38%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="55%" stop-color="#d8d8db" stop-opacity="0.65"/>
+      <stop offset="100%" stop-color="#d8d8db" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="panelFade" x1="0%" y1="55%" x2="100%" y2="78%">
+      <stop offset="0%" stop-color="#f4f4f6" stop-opacity="0.95"/>
+      <stop offset="24%" stop-color="#c2c4c9" stop-opacity="0.7"/>
+      <stop offset="50%" stop-color="#5b5d63" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#0a0b0e" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="darkStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6c6f76"/>
+      <stop offset="100%" stop-color="#101115"/>
+    </linearGradient>
+    <filter id="outerBlur" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" fill="#07080b"/>
+  <ellipse cx="256" cy="256" rx="216" ry="216" fill="url(#bgGlow)" filter="url(#outerBlur)"/>
+  <g transform="translate(92 92)">
+    <rect x="0" y="0" width="328" height="328" rx="30" fill="url(#tileFill)" stroke="url(#darkStroke)" stroke-width="2"/>
+    <path d="M0 206c79-18 251-18 328 18v82c0 12-10 22-22 22H22c-12 0-22-10-22-22z" fill="#040507" opacity="0.85"/>
+    <path d="M0 206c72-16 256-16 328 18v64H0z" fill="url(#panelFade)"/>
+    <path d="M0 206c72-16 256-16 328 18" fill="none" stroke="#111216" stroke-width="3" opacity="0.9"/>
+    <ellipse cx="42" cy="286" rx="78" ry="72" fill="url(#arcGlow)" filter="url(#softGlow)"/>
+
+    <g fill="none" stroke="#ededee" stroke-linecap="round">
+      <path d="M118 20v117" stroke-width="2"/>
+      <path d="M138 20v116" stroke-width="5"/>
+      <path d="M159 20v113" stroke-width="2"/>
+      <path d="M180 20v109" stroke-width="4"/>
+      <path d="M200 20v118" stroke-width="2"/>
+      <path d="M124 20l-7 124" stroke-width="3"/>
+      <path d="M160 20l2 116" stroke-width="3"/>
+      <path d="M194 20l17 123" stroke-width="3"/>
+    </g>
+
+    <g transform="translate(88 40)" fill="#f7f7f8" stroke="#111216" stroke-width="1.2">
+      <rect x="0" y="20" width="154" height="14" rx="1" transform="rotate(21 77 27)"/>
+      <rect x="-2" y="56" width="162" height="14" rx="1" transform="rotate(-22 79 63)"/>
+    </g>
+
+    <g transform="translate(84 182)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="0" y="0" width="48" height="48" rx="4" fill="#ececef" stroke="#17181c" stroke-width="2"/>
+      <path d="M11 24l10 10 22-24" stroke="#17181c" stroke-width="5"/>
+      <rect x="0" y="60" width="36" height="36" rx="3" fill="#ececef" stroke="#17181c" stroke-width="2"/>
+      <rect x="0" y="112" width="36" height="36" rx="3" fill="#ececef" stroke="#17181c" stroke-width="2"/>
+      <path d="M56 34h78" stroke="#0f1014" stroke-width="12"/>
+      <path d="M56 78h96" stroke="#0f1014" stroke-width="12"/>
+      <path d="M56 120h98" stroke="#0f1014" stroke-width="12"/>
+    </g>
+  </g>
+</svg>
