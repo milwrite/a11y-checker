@@ -1,0 +1,60 @@
+name: Run Accessibility Audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "URL to audit"
+        required: true
+        type: string
+      max_pages:
+        description: "Maximum pages to crawl"
+        required: false
+        default: "50"
+        type: string
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Fetch existing results
+        continue-on-error: true
+        run: |
+          mkdir -p docs/results
+          # Try to fetch existing index from deployed pages
+          curl -sf "https://zmuhls.github.io/a11y-checker/results/index.json" -o docs/results/index.json || echo "[]" > docs/results/index.json
+          # Fetch existing reports referenced in index
+          for file in $(cat docs/results/index.json | node -e "process.stdin.resume();let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{JSON.parse(d).forEach(r=>console.log(r.file))}catch(e){}})"); do
+            curl -sf "https://zmuhls.github.io/a11y-checker/results/$file" -o "docs/results/$file" || true
+          done
+
+      - name: Run audit
+        env:
+          MAX_PAGES: ${{ inputs.max_pages }}
+        run: node run-audit.js "${{ inputs.url }}"
+
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - uses: actions/deploy-pages@v4

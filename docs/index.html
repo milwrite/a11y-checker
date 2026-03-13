@@ -35,17 +35,19 @@
     background-size: 40px 40px;
   }
 
-  /* --- URL INPUT --- */
-  .input-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 2rem;
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
   }
 
-  .input-screen h1 {
+  /* --- HEADER --- */
+  .site-header {
+    text-align: center;
+    padding: 3rem 0 2rem;
+  }
+
+  .site-header h1 {
     font-size: 1.8rem;
     font-weight: 700;
     color: var(--accent);
@@ -53,150 +55,130 @@
     margin-bottom: 0.25rem;
   }
 
-  .input-screen .tagline {
+  .site-header .tagline {
     font-size: 0.8rem;
     color: var(--muted);
-    margin-bottom: 2.5rem;
+    margin-bottom: 1rem;
   }
 
-  .url-form {
+  .badges {
     display: flex;
-    gap: 0;
-    width: 100%;
-    max-width: 560px;
-  }
-
-  .url-form input {
-    flex: 1;
-    padding: 0.7rem 1rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-right: none;
-    border-radius: 4px 0 0 4px;
-    color: var(--accent);
-    font-family: inherit;
-    font-size: 0.88rem;
-    outline: none;
-  }
-
-  .url-form input:focus {
-    border-color: var(--dim);
-  }
-
-  .url-form input::placeholder {
-    color: var(--muted);
-  }
-
-  .url-form button {
-    padding: 0.7rem 1.5rem;
-    background: var(--accent);
-    color: var(--bg);
-    border: 1px solid var(--accent);
-    border-radius: 0 4px 4px 0;
-    font-family: inherit;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .url-form button:hover {
-    background: #e0e0e0;
-  }
-
-  .url-form button:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
-
-  .input-hints {
-    margin-top: 1.5rem;
-    font-size: 0.75rem;
-    color: var(--muted);
-    text-align: center;
-    line-height: 1.8;
-  }
-
-  .input-hints kbd {
-    padding: 0.1rem 0.4rem;
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    font-size: 0.72rem;
-    background: var(--surface);
+    justify-content: center;
+    gap: 0.4rem;
+    margin-bottom: 2rem;
   }
 
   .badge {
-    display: inline-block;
     padding: 0.15rem 0.5rem;
     border: 1px solid var(--border);
     border-radius: 3px;
     font-size: 0.68rem;
     color: var(--muted);
-    margin: 0 0.15rem;
   }
 
-  .gh-pages-notice {
-    margin-top: 2rem;
-    padding: 1rem 1.25rem;
+  /* --- HOW TO USE --- */
+  .how-to {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 4px;
-    font-size: 0.78rem;
-    color: var(--muted);
-    max-width: 560px;
-    display: none;
-    line-height: 1.7;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
   }
 
-  .gh-pages-notice code {
+  .how-to h2 {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+
+  .how-to ol {
+    list-style: none;
+    counter-reset: steps;
+    padding: 0;
+  }
+
+  .how-to ol li {
+    counter-increment: steps;
+    padding: 0.3rem 0 0.3rem 1.5rem;
+    position: relative;
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+
+  .how-to ol li::before {
+    content: counter(steps);
+    position: absolute;
+    left: 0;
+    color: var(--dim);
+    font-weight: 600;
+  }
+
+  .how-to code {
     background: var(--bg);
     padding: 0.1rem 0.35rem;
     border-radius: 3px;
-    color: var(--text);
+    font-size: 0.8rem;
+    color: var(--accent);
+  }
+
+  .how-to a {
+    color: var(--minor);
+    text-decoration: none;
+  }
+
+  .how-to a:hover {
+    text-decoration: underline;
+  }
+
+  /* --- REPORT SELECTOR --- */
+  .report-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  .report-bar label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+
+  .report-bar select {
+    flex: 1;
+    max-width: 400px;
+    padding: 0.4rem 0.6rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 0.8rem;
+    outline: none;
+  }
+
+  .report-bar select:focus {
+    border-color: var(--dim);
   }
 
   /* --- DASHBOARD --- */
   .dashboard {
     display: none;
-    flex-direction: column;
-    height: 100vh;
   }
 
   .dashboard.active {
-    display: flex;
+    display: block;
   }
 
-  .input-screen.hidden {
-    display: none;
-  }
-
-  header {
-    padding: 0.75rem 1.25rem;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    flex-shrink: 0;
-  }
-
-  header h1 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--accent);
-  }
-
-  header h1 span {
-    color: var(--muted);
-    font-weight: 400;
-  }
-
-  .counters {
+  .summary {
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
+    margin-bottom: 0.75rem;
   }
 
   .counter {
@@ -214,17 +196,15 @@
   .counter.minor { border-left: 3px solid var(--minor); }
 
   .toolbar {
-    padding: 0.5rem 1.25rem;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 0;
     display: flex;
     gap: 0.4rem;
     flex-wrap: wrap;
     align-items: center;
-    flex-shrink: 0;
+    margin-bottom: 0.75rem;
   }
 
-  .toolbar label.label-text {
+  .toolbar .label-text {
     font-size: 0.72rem;
     color: var(--muted);
     margin-right: 0.15rem;
@@ -266,25 +246,22 @@
     cursor: pointer;
   }
 
-  button.export-btn:disabled { opacity: 0.3; cursor: default; }
-  button.export-btn:not(:disabled):hover { border-color: var(--muted); }
+  button.export-btn:hover { border-color: var(--muted); }
 
-  .progress {
-    padding: 0.4rem 1.25rem;
+  .meta {
     font-size: 0.75rem;
     color: var(--muted);
-    background: var(--surface);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
     border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
   }
 
   #log {
-    padding: 0.75rem 1.25rem;
-    overflow-y: auto;
-    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    max-height: 70vh;
+    overflow-y: auto;
   }
 
   .entry {
@@ -300,8 +277,6 @@
   .entry.serious { border-left-color: var(--serious); }
   .entry.moderate { border-left-color: var(--moderate); }
   .entry.minor { border-left-color: var(--minor); }
-  .entry.status { border-left-color: var(--green); color: var(--muted); }
-  .entry.error { border-left-color: var(--critical); color: var(--critical); }
 
   .entry .impact {
     display: inline-block;
@@ -332,219 +307,112 @@
     margin-left: 0.25rem;
   }
 
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .empty-state p + p { margin-top: 0.5rem; }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.72rem;
+    color: var(--dim);
+    text-align: center;
+  }
+
+  footer a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  footer a:hover { text-decoration: underline; }
+
   @media (max-width: 600px) {
-    .input-screen h1 { font-size: 1.4rem; }
-    .url-form { flex-direction: column; }
-    .url-form input { border-right: 1px solid var(--border); border-radius: 4px 4px 0 0; }
-    .url-form button { border-radius: 0 0 4px 4px; }
-    .counters { gap: 0.3rem; }
-    .toolbar { gap: 0.3rem; }
+    .site-header h1 { font-size: 1.4rem; }
+    .container { padding: 1.5rem 1rem; }
+    .report-bar select { max-width: 100%; }
   }
 </style>
 </head>
 <body>
+<div class="container">
 
-<!-- URL INPUT SCREEN -->
-<div class="input-screen" id="input-screen">
-  <h1>a11y-checker</h1>
-  <p class="tagline">real-time WCAG 2.1 AA accessibility auditor</p>
-  <form class="url-form" id="url-form">
-    <input type="url" id="url-input" placeholder="https://example.com" required autofocus>
-    <button type="submit" id="start-btn">Audit</button>
-  </form>
-  <div class="input-hints">
-    <span class="badge">axe-core</span>
-    <span class="badge">playwright</span>
-    <span class="badge">WCAG 2.1 AA</span>
-    <br>
-    crawls up to 50 pages via sitemap + link discovery
-  </div>
-  <div class="gh-pages-notice" id="gh-notice">
-    This app requires the local server.<br>
-    Run <code>npm install && node server.js</code> then open <code>http://localhost:3000</code>
-  </div>
-</div>
-
-<!-- DASHBOARD -->
-<div class="dashboard" id="dashboard">
-  <header>
-    <h1>a11y-checker <span id="target-label"></span></h1>
-    <div class="counters">
-      <div class="counter" id="total">0</div>
-      <div class="counter critical" id="cnt-critical">0</div>
-      <div class="counter serious" id="cnt-serious">0</div>
-      <div class="counter moderate" id="cnt-moderate">0</div>
-      <div class="counter minor" id="cnt-minor">0</div>
-    </div>
-  </header>
-
-  <div class="toolbar">
-    <label class="label-text">Severity:</label>
-    <label class="toggle" data-filter="critical"><input type="checkbox" checked>critical</label>
-    <label class="toggle" data-filter="serious"><input type="checkbox" checked>serious</label>
-    <label class="toggle" data-filter="moderate"><input type="checkbox" checked>moderate</label>
-    <label class="toggle" data-filter="minor"><input type="checkbox" checked>minor</label>
-    <label class="label-text" style="margin-left:0.75rem">Viewport:</label>
-    <label class="toggle" data-filter="desktop"><input type="checkbox" checked>desktop</label>
-    <label class="toggle" data-filter="mobile"><input type="checkbox" checked>mobile</label>
-    <span class="spacer"></span>
-    <div class="export-group">
-      <button class="export-btn" id="export-json" disabled>JSON</button>
-      <button class="export-btn" id="export-csv" disabled>CSV</button>
+  <div class="site-header">
+    <h1>a11y-checker</h1>
+    <p class="tagline">real-time WCAG 2.1 AA accessibility auditor</p>
+    <div class="badges">
+      <span class="badge">axe-core</span>
+      <span class="badge">playwright</span>
+      <span class="badge">WCAG 2.1 AA</span>
     </div>
   </div>
 
-  <div class="progress" id="progress">connecting...</div>
-  <div id="log"></div>
+  <div class="how-to">
+    <h2>Run an Audit</h2>
+    <ol>
+      <li>Go to <a href="https://github.com/zmuhls/a11y-checker/actions/workflows/audit.yml" target="_blank" rel="noopener">Actions &rarr; Run Accessibility Audit</a></li>
+      <li>Click <code>Run workflow</code></li>
+      <li>Enter the URL to audit and optionally set the page limit</li>
+      <li>Results appear here once the workflow completes</li>
+    </ol>
+  </div>
+
+  <div class="report-bar">
+    <label>Report:</label>
+    <select id="report-select">
+      <option value="">loading...</option>
+    </select>
+  </div>
+
+  <div class="dashboard" id="dashboard">
+    <div class="meta" id="meta"></div>
+    <div class="summary" id="summary"></div>
+
+    <div class="toolbar">
+      <span class="label-text">Severity:</span>
+      <label class="toggle" data-filter="critical"><input type="checkbox" checked>critical</label>
+      <label class="toggle" data-filter="serious"><input type="checkbox" checked>serious</label>
+      <label class="toggle" data-filter="moderate"><input type="checkbox" checked>moderate</label>
+      <label class="toggle" data-filter="minor"><input type="checkbox" checked>minor</label>
+      <span class="label-text" style="margin-left:0.75rem">Viewport:</span>
+      <label class="toggle" data-filter="desktop"><input type="checkbox" checked>desktop</label>
+      <label class="toggle" data-filter="mobile"><input type="checkbox" checked>mobile</label>
+      <span class="spacer"></span>
+      <div class="export-group">
+        <button class="export-btn" id="export-json">JSON</button>
+        <button class="export-btn" id="export-csv">CSV</button>
+      </div>
+    </div>
+
+    <div id="log"></div>
+  </div>
+
+  <div class="empty-state" id="empty-state">
+    <p>No audit results yet.</p>
+    <p>Trigger a workflow from the Actions tab to get started.</p>
+  </div>
+
+  <footer>
+    <a href="https://github.com/zmuhls/a11y-checker">github.com/zmuhls/a11y-checker</a> &middot; MIT
+  </footer>
+
 </div>
 
 <script>
-const inputScreen = document.getElementById("input-screen");
+const reportSelect = document.getElementById("report-select");
 const dashboard = document.getElementById("dashboard");
-const urlForm = document.getElementById("url-form");
-const urlInput = document.getElementById("url-input");
-const startBtn = document.getElementById("start-btn");
-const log = document.getElementById("log");
-const progress = document.getElementById("progress");
-const exportJson = document.getElementById("export-json");
-const exportCsv = document.getElementById("export-csv");
-const ghNotice = document.getElementById("gh-notice");
+const emptyState = document.getElementById("empty-state");
+const logEl = document.getElementById("log");
+const metaEl = document.getElementById("meta");
+const summaryEl = document.getElementById("summary");
 
-const counts = { total: 0, critical: 0, serious: 0, moderate: 0, minor: 0 };
 const filters = { critical: true, serious: true, moderate: true, minor: true, desktop: true, mobile: true };
-let autoScroll = true;
-let es = null;
-
-// Detect if running on GitHub Pages (no backend)
-const isLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
-
-if (!isLocal) {
-  ghNotice.style.display = "block";
-  startBtn.disabled = true;
-  urlInput.disabled = true;
-  urlInput.placeholder = "requires local server";
-}
-
-// Check if server already has an audit running
-if (isLocal) {
-  fetch("/status").then(r => r.json()).then(d => {
-    if (d.auditing && d.url) {
-      showDashboard(d.url);
-      connectSSE();
-    }
-  }).catch(() => {});
-}
-
-urlForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const url = urlInput.value.trim();
-  if (!url) return;
-
-  startBtn.disabled = true;
-  startBtn.textContent = "Starting...";
-
-  try {
-    const res = await fetch("/audit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      alert(data.error || "Failed to start audit");
-      startBtn.disabled = false;
-      startBtn.textContent = "Audit";
-      return;
-    }
-    showDashboard(url);
-    connectSSE();
-  } catch (err) {
-    alert("Could not connect to server. Is it running?");
-    startBtn.disabled = false;
-    startBtn.textContent = "Audit";
-  }
-});
-
-function showDashboard(url) {
-  inputScreen.classList.add("hidden");
-  dashboard.classList.add("active");
-  try {
-    document.getElementById("target-label").textContent = `— ${new URL(url).hostname}`;
-    document.title = `a11y-checker — ${new URL(url).hostname}`;
-  } catch (_) {
-    document.getElementById("target-label").textContent = `— ${url}`;
-  }
-}
-
-function connectSSE() {
-  es = new EventSource("/events");
-
-  es.addEventListener("status", (e) => {
-    const d = JSON.parse(e.data);
-    addEntry(d.message, "status");
-  });
-
-  es.addEventListener("page-start", (e) => {
-    const d = JSON.parse(e.data);
-    progress.textContent = `page ${d.pageIndex} — ${d.url}`;
-    addEntry(`<strong>${d.pageIndex}:</strong> <span class="url">${d.url}</span>`, "status");
-  });
-
-  es.addEventListener("page-audit", (e) => {
-    const d = JSON.parse(e.data);
-    addEntry(`${d.viewport}: ${d.violationCount} violations, ${d.passCount} passed`, "status");
-  });
-
-  es.addEventListener("violation", (e) => {
-    const d = JSON.parse(e.data);
-    counts.total++;
-    counts[d.impact] = (counts[d.impact] || 0) + 1;
-    updateCounters();
-
-    const show = filters[d.impact] !== false && filters[d.viewport] !== false;
-    const html = `
-      <span class="impact">${d.impact}</span>
-      <span class="rule">${d.ruleId}</span>
-      <span class="viewport-badge">${d.viewport}</span>
-      — ${escHtml(d.help)}
-      <br><span class="target">${escHtml(d.target)}</span>
-      <br><span class="url">${escHtml(d.url)}</span>
-      ${d.helpUrl ? ` · <a href="${escAttr(d.helpUrl)}" target="_blank" rel="noopener">docs</a>` : ""}
-      ${d.wcagTags && d.wcagTags.length ? ` · <span class="url">${escHtml(d.wcagTags.join(", "))}</span>` : ""}
-    `;
-    const div = document.createElement("div");
-    div.className = `entry violation ${d.impact}`;
-    div.innerHTML = html;
-    div.dataset.impact = d.impact;
-    div.dataset.viewport = d.viewport;
-    if (!show) div.style.display = "none";
-    log.appendChild(div);
-    if (autoScroll) div.scrollIntoView({ behavior: "smooth", block: "end" });
-  });
-
-  es.addEventListener("page-error", (e) => {
-    const d = JSON.parse(e.data);
-    addEntry(`error on ${escHtml(d.url)} (${d.viewport}): ${escHtml(d.error)}`, "error");
-  });
-
-  es.addEventListener("complete", (e) => {
-    const d = JSON.parse(e.data);
-    progress.textContent = `complete — ${d.totalPages} pages, ${d.totalViolations} violations`;
-    addEntry(`<strong>audit complete.</strong> ${d.totalPages} pages, ${d.totalViolations} violations.`, "status");
-    exportJson.disabled = false;
-    exportCsv.disabled = false;
-    es.close();
-  });
-
-  es.addEventListener("error", () => {
-    progress.textContent = "connection lost. refresh to retry.";
-  });
-}
-
-// Scroll tracking
-log.addEventListener("scroll", () => {
-  autoScroll = log.scrollTop + log.clientHeight >= log.scrollHeight - 40;
-});
+let currentReport = null;
 
 // Filters
 document.querySelectorAll(".toggle").forEach((label) => {
@@ -558,41 +426,138 @@ document.querySelectorAll(".toggle").forEach((label) => {
 });
 
 function applyFilters() {
-  log.querySelectorAll(".entry.violation").forEach((el) => {
+  logEl.querySelectorAll(".entry").forEach((el) => {
     const show = filters[el.dataset.impact] !== false && filters[el.dataset.viewport] !== false;
     el.style.display = show ? "" : "none";
   });
 }
 
-function updateCounters() {
-  document.getElementById("total").textContent = `${counts.total} total`;
-  document.getElementById("cnt-critical").textContent = `${counts.critical} critical`;
-  document.getElementById("cnt-serious").textContent = `${counts.serious} serious`;
-  document.getElementById("cnt-moderate").textContent = `${counts.moderate} moderate`;
-  document.getElementById("cnt-minor").textContent = `${counts.minor} minor`;
+// Load index
+async function loadIndex() {
+  try {
+    const res = await fetch("results/index.json");
+    if (!res.ok) throw new Error("No results");
+    const index = await res.json();
+    if (!index.length) throw new Error("Empty");
+
+    reportSelect.innerHTML = "";
+    for (const entry of index) {
+      const opt = document.createElement("option");
+      opt.value = entry.file;
+      const date = new Date(entry.timestamp).toLocaleDateString("en-US", {
+        month: "short", day: "numeric", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      });
+      const host = (() => { try { return new URL(entry.url).hostname; } catch (_) { return entry.url; } })();
+      opt.textContent = `${host} — ${entry.totalViolations} violations — ${date}`;
+      reportSelect.appendChild(opt);
+    }
+
+    reportSelect.addEventListener("change", () => loadReport(reportSelect.value));
+    loadReport(index[0].file);
+  } catch (_) {
+    reportSelect.innerHTML = "<option value=''>no reports available</option>";
+    emptyState.style.display = "block";
+    dashboard.classList.remove("active");
+  }
 }
 
-function addEntry(html, classes = "", data = {}) {
-  const div = document.createElement("div");
-  div.className = `entry ${classes}`;
-  div.innerHTML = html;
-  for (const [k, v] of Object.entries(data)) div.dataset[k] = v;
-  log.appendChild(div);
-  if (autoScroll) div.scrollIntoView({ behavior: "smooth", block: "end" });
+async function loadReport(file) {
+  if (!file) return;
+  try {
+    const res = await fetch(`results/${file}`);
+    currentReport = await res.json();
+    renderReport(currentReport);
+  } catch (err) {
+    logEl.innerHTML = `<div class="entry" style="color:var(--critical)">Failed to load report: ${escHtml(err.message)}</div>`;
+  }
 }
 
-exportJson.addEventListener("click", () => { window.open("/report.json"); });
-exportCsv.addEventListener("click", () => { window.open("/report.csv"); });
+function renderReport(report) {
+  emptyState.style.display = "none";
+  dashboard.classList.add("active");
+
+  const host = (() => { try { return new URL(report.url).hostname; } catch (_) { return report.url; } })();
+  const date = new Date(report.timestamp).toLocaleDateString("en-US", {
+    weekday: "short", month: "short", day: "numeric", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+  metaEl.innerHTML = `<strong>${escHtml(host)}</strong> &middot; ${report.totalPages} pages &middot; ${date}`;
+
+  const counts = { critical: 0, serious: 0, moderate: 0, minor: 0 };
+  for (const v of report.violations) {
+    counts[v.impact] = (counts[v.impact] || 0) + 1;
+  }
+
+  summaryEl.innerHTML = `
+    <div class="counter">${report.totalViolations} total</div>
+    <div class="counter critical">${counts.critical} critical</div>
+    <div class="counter serious">${counts.serious} serious</div>
+    <div class="counter moderate">${counts.moderate} moderate</div>
+    <div class="counter minor">${counts.minor} minor</div>
+  `;
+
+  logEl.innerHTML = "";
+  for (const v of report.violations) {
+    const div = document.createElement("div");
+    div.className = `entry ${v.impact}`;
+    div.dataset.impact = v.impact;
+    div.dataset.viewport = v.viewport;
+    div.innerHTML = `
+      <span class="impact">${v.impact}</span>
+      <span class="rule">${escHtml(v.ruleId)}</span>
+      <span class="viewport-badge">${v.viewport}</span>
+      — ${escHtml(v.help)}
+      <br><span class="target">${escHtml(v.target)}</span>
+      <br><span class="url">${escHtml(v.url)}</span>
+      ${v.helpUrl ? ` &middot; <a href="${escAttr(v.helpUrl)}" target="_blank" rel="noopener">docs</a>` : ""}
+      ${v.wcagTags && v.wcagTags.length ? ` &middot; <span class="url">${escHtml(v.wcagTags.join(", "))}</span>` : ""}
+    `;
+    const show = filters[v.impact] !== false && filters[v.viewport] !== false;
+    if (!show) div.style.display = "none";
+    logEl.appendChild(div);
+  }
+}
+
+// Export
+document.getElementById("export-json").addEventListener("click", () => {
+  if (!currentReport) return;
+  downloadBlob(JSON.stringify(currentReport, null, 2), "a11y-report.json", "application/json");
+});
+
+document.getElementById("export-csv").addEventListener("click", () => {
+  if (!currentReport) return;
+  const header = "url,viewport,impact,ruleId,help,target,wcagTags,helpUrl\n";
+  const rows = currentReport.violations.map((v) =>
+    [v.url, v.viewport, v.impact, v.ruleId,
+     `"${(v.help || "").replace(/"/g, '""')}"`,
+     `"${(v.target || "").replace(/"/g, '""')}"`,
+     `"${(v.wcagTags || []).join("; ")}"`,
+     v.helpUrl || ""].join(",")
+  ).join("\n");
+  downloadBlob(header + rows, "a11y-report.csv", "text/csv");
+});
+
+function downloadBlob(content, filename, type) {
+  const blob = new Blob([content], { type });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
 function escHtml(s) {
   const d = document.createElement("div");
-  d.textContent = s;
+  d.textContent = s || "";
   return d.innerHTML;
 }
 
 function escAttr(s) {
-  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return (s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+
+loadIndex();
 </script>
 </body>
 </html>
