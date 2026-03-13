@@ -1,27 +1,27 @@
 # a11y-checker
 
-WCAG 2.1 AA accessibility auditor powered by GitHub Actions. Trigger an audit from the Actions tab, view results on the dashboard.
+An automated accessibility auditor that checks web pages against WCAG 2.1 AA standards. Runs entirely on GitHub Actions — no local setup required.
 
 **Dashboard:** [zmuhls.github.io/a11y-checker](https://zmuhls.github.io/a11y-checker/)
 
-## How it works
+## What it does
 
-1. Go to [Actions > Run Accessibility Audit](https://github.com/zmuhls/a11y-checker/actions/workflows/audit.yml)
-2. Click **Run workflow**
-3. Enter the URL to audit (and optionally a page limit)
-4. The workflow crawls the site, runs axe-core against every page, and publishes results to GitHub Pages
-5. View violations on the dashboard with severity/viewport filters and JSON/CSV export
+- **Checks any website for accessibility issues** — enter a URL and the tool crawls up to 50 pages, flagging problems that affect screen readers, keyboard navigation, color contrast, missing alt text, form labels, and more
+- **Tests at both desktop and mobile sizes** — every page is audited at 1280x800 and 375x812 viewports, catching responsive layout issues that only appear on smaller screens
+- **Discovers pages automatically** — parses sitemap.xml, reads robots.txt, and follows links through navigation, footers, and page content so you don't have to list every URL by hand
+- **Reports against WCAG 2.1 Level AA** — the standard required by most institutional, government, and educational web policies, powered by axe-core
+- **Exports results as JSON or CSV** — for sharing with developers, filing tickets, or tracking progress over time
 
-## What it tests
+## How to run an audit
 
-- Crawls pages via sitemap.xml, robots.txt, and link discovery
-- Tests every page at desktop (1280x800) and mobile (375x812) viewports
-- Checks against WCAG 2.1 Level AA plus best practices
-- Default limit: 50 pages per audit
+1. Go to the [dashboard](https://zmuhls.github.io/a11y-checker/) and enter a URL
+2. Submit the pre-filled GitHub issue that opens
+3. The audit runs automatically via GitHub Actions
+4. Results appear on the dashboard and get posted back to the issue
+
+You can also trigger audits from the [Actions tab](https://github.com/zmuhls/a11y-checker/actions/workflows/audit.yml) directly.
 
 ## Local usage
-
-You can also run audits locally:
 
 ```bash
 npm install
@@ -29,7 +29,7 @@ npx playwright install chromium
 node run-audit.js https://example.com
 ```
 
-Or use the local dev server with live streaming:
+Or with a live streaming dashboard:
 
 ```bash
 node server.js https://example.com
