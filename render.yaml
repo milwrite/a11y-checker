@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: a11y-checker
+    runtime: docker
+    plan: free
+    envVars:
+      - key: ALLOWED_ORIGIN
+        value: https://zmuhls.github.io

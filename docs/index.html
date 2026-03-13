@@ -338,25 +338,24 @@
 
 </div>
 
-<iframe id="audit-frame" sandbox="allow-same-origin allow-scripts"></iframe>
-
 <script>
-const MAX_PAGES = 20;
+// Backend URL — update this after deploying to Render
+const API = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  ? ""
+  : "https://a11y-checker.onrender.com";
 
 const urlForm = document.getElementById("url-form");
 const urlInput = document.getElementById("url-input");
 const auditBtn = document.getElementById("audit-btn");
 const dashboardEl = document.getElementById("dashboard");
-const progressEl = document.getElementById("progress");
 const progressText = document.getElementById("progress-text");
 const spinnerEl = document.getElementById("spinner");
 const logEl = document.getElementById("log");
 const exportJson = document.getElementById("export-json");
 const exportCsv = document.getElementById("export-csv");
-const frame = document.getElementById("audit-frame");
 
 const counts = { total: 0, critical: 0, serious: 0, moderate: 0, minor: 0 };
-const filters = { critical: true, serious: true, moderate: true, minor: true };
+const filters = { critical: true, serious: true, moderate: true, minor: true, desktop: true, mobile: true };
 const allViolations = [];
 let autoScroll = true;
 let running = false;
@@ -369,7 +368,8 @@ document.querySelectorAll(".toggle").forEach((label) => {
     filters[key] = cb.checked;
     label.classList.toggle("off", !cb.checked);
     logEl.querySelectorAll(".entry.violation").forEach((el) => {
-      el.style.display = filters[el.dataset.impact] !== false ? "" : "none";
+      const show = filters[el.dataset.impact] !== false && filters[el.dataset.viewport] !== false;
+      el.style.display = show ? "" : "none";
     });
   });
 });
@@ -384,6 +384,7 @@ urlForm.addEventListener("submit", async (e) => {
   if (running) return;
   const url = urlInput.value.trim();
   if (!url) return;
+
   running = true;
   auditBtn.disabled = true;
   auditBtn.textContent = "Running...";
@@ -394,293 +395,99 @@ urlForm.addEventListener("submit", async (e) => {
   exportJson.disabled = true;
   exportCsv.disabled = true;
   dashboardEl.classList.add("active");
+  spinnerEl.style.display = "";
+  progressText.textContent = "connecting to server...";
 
   try {
-    await runAudit(url);
+    // Trigger the audit on the backend
+    const res = await fetch(`${API}/audit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Server error");
+
+    progressText.textContent = "audit started — streaming results...";
+
+    // Connect to SSE stream
+    await streamResults();
   } catch (err) {
-    addEntry(`audit error: ${err.message}`, "error");
+    addEntry(`error: ${escHtml(err.message)}`, "error");
+    progressText.textContent = "failed";
+    spinnerEl.style.display = "none";
   }
 
-  spinnerEl.style.display = "none";
-  progressText.textContent = `complete — ${allViolations.length} violations found`;
-  exportJson.disabled = false;
-  exportCsv.disabled = false;
   auditBtn.disabled = false;
   auditBtn.textContent = "Audit";
   running = false;
 });
 
-async function runAudit(baseUrl) {
-  const baseOrigin = new URL(baseUrl).origin;
-  const baseHost = new URL(baseUrl).host;
-  const visited = new Set();
-  const queue = [baseUrl];
-  visited.add(normalizeUrl(baseUrl));
-
-  // Try sitemap discovery
-  addEntry("checking sitemap...", "status");
-  const sitemapUrls = await discoverSitemap(baseOrigin, baseHost);
-  if (sitemapUrls.length > 0) {
-    addEntry(`found ${sitemapUrls.length} pages in sitemap`, "status");
-    for (const u of sitemapUrls) {
-      const norm = normalizeUrl(u);
-      if (!visited.has(norm) && visited.size < MAX_PAGES) {
-        visited.add(norm);
-        queue.push(u);
-      }
-    }
-  }
-
-  let pageIndex = 0;
-  while (queue.length > 0 && pageIndex < MAX_PAGES) {
-    const url = queue.shift();
-    pageIndex++;
-    progressText.textContent = `page ${pageIndex} — ${url}`;
-    addEntry(`<strong>${pageIndex}:</strong> <span class="url">${escHtml(url)}</span>`, "status");
-
-    try {
-      const html = await fetchPage(url);
-      if (!html) {
-        addEntry(`could not fetch ${url}`, "error");
-        continue;
-      }
-
-      // Detect bot protection (Cloudflare, etc.)
-      if (isBlockedPage(html)) {
-        addEntry(
-          `<strong>${escHtml(url)}</strong> is behind bot protection (Cloudflare). ` +
-          `Client-side auditing can't bypass this. ` +
-          `Run locally instead: <code>node run-audit.js ${escHtml(url)}</code>`,
-          "error"
-        );
-        continue;
-      }
-
-      // Rewrite relative URLs to absolute
-      const rewritten = rewriteUrls(html, url);
-
-      // Load into iframe and run axe
-      const violations = await auditHtml(rewritten);
-
-      for (const v of violations) {
-        for (const node of v.nodes) {
-          const violation = {
-            url,
-            pageIndex,
-            ruleId: v.id,
-            impact: v.impact || "minor",
-            description: v.description,
-            help: v.help,
-            helpUrl: v.helpUrl,
-            wcagTags: (v.tags || []).filter((t) => t.startsWith("wcag") || t === "best-practice"),
-            target: (node.target || []).join(", "),
-            html: (node.html || "").slice(0, 200),
-          };
-          allViolations.push(violation);
-          counts.total++;
-          counts[violation.impact] = (counts[violation.impact] || 0) + 1;
-          updateCounters();
-          addViolation(violation);
-        }
-      }
-
-      addEntry(`${violations.reduce((s, v) => s + v.nodes.length, 0)} violations`, "status");
-
-      // Discover links — prioritize nav, header, footer
-      if (visited.size < MAX_PAGES) {
-        const links = extractLinks(html, url, baseHost);
-        let added = 0;
-        for (const link of links) {
-          const norm = normalizeUrl(link);
-          if (!visited.has(norm) && visited.size < MAX_PAGES) {
-            visited.add(norm);
-            queue.push(link);
-            added++;
-          }
-        }
-        if (added > 0) {
-          addEntry(`discovered ${added} new pages (${queue.length} queued)`, "status");
-        }
-      }
-    } catch (err) {
-      addEntry(`error on ${url}: ${escHtml(err.message)}`, "error");
-    }
-  }
-
-  addEntry(`<strong>audit complete.</strong> ${pageIndex} pages, ${allViolations.length} violations.`, "status");
-}
-
-// --- Page fetching with fallback proxies ---
-const PROXIES = [
-  "https://api.allorigins.win/raw?url=",
-  "https://corsproxy.io/?url=",
-];
-
-async function fetchPage(url) {
-  for (const proxy of PROXIES) {
-    try {
-      const res = await fetch(proxy + encodeURIComponent(url), { signal: AbortSignal.timeout(15000) });
-      if (!res.ok) continue;
-      const text = await res.text();
-      if (text && text.length > 0) return text;
-    } catch (_) {}
-  }
-  return null;
-}
-
-// --- Sitemap discovery ---
-async function discoverSitemap(origin, host) {
-  const urls = [];
-  try {
-    const robotsTxt = await fetchPage(origin + "/robots.txt");
-    const sitemapLocs = [origin + "/sitemap.xml"];
-    if (robotsTxt) {
-      for (const line of robotsTxt.split("\n")) {
-        const match = line.match(/^sitemap:\s*(.+)/i);
-        if (match) sitemapLocs.push(match[1].trim());
-      }
-    }
-
-    for (const loc of [...new Set(sitemapLocs)]) {
-      try {
-        const xml = await fetchPage(loc);
-        if (!xml) continue;
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(xml, "text/xml");
-        for (const locEl of doc.querySelectorAll("loc")) {
-          const u = locEl.textContent.trim();
-          try {
-            if (new URL(u).host === host) urls.push(u);
-          } catch (_) {}
-        }
-      } catch (_) {}
-    }
-  } catch (_) {}
-  return urls;
-}
-
-// --- Link extraction: prioritize nav, header, footer, then body ---
-function extractLinks(html, pageUrl, baseHost) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, "text/html");
-  const base = new URL(pageUrl);
-
-  // High-priority: links in nav, header, footer, sidebars, role=navigation
-  const highPriority = doc.querySelectorAll(
-    'nav a[href], header a[href], footer a[href], ' +
-    '[role="navigation"] a[href], [role="banner"] a[href], ' +
-    '.nav a[href], .menu a[href], .sidebar a[href], ' +
-    '#nav a[href], #menu a[href], #sidebar a[href], #header a[href], #footer a[href]'
-  );
-
-  // Normal priority: all other links
-  const allAnchors = doc.querySelectorAll("a[href]");
-
-  const seen = new Set();
-  const prioritized = [];
-
-  function addLink(a, priority) {
-    try {
-      const href = a.getAttribute("href");
-      if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("javascript:")) return;
-      // Skip file downloads, images, feeds
-      if (/\.(pdf|zip|png|jpg|jpeg|gif|svg|xml|rss|atom|css|js)$/i.test(href)) return;
-      const resolved = new URL(href, base);
-      if (resolved.host !== baseHost) return;
-      if (resolved.protocol !== "https:" && resolved.protocol !== "http:") return;
-      resolved.hash = "";
-      resolved.search = "";
-      const norm = resolved.origin + resolved.pathname.replace(/\/+$/, "");
-      if (seen.has(norm)) return;
-      seen.add(norm);
-      prioritized.push({ url: resolved.href, priority });
-    } catch (_) {}
-  }
-
-  // Add high-priority links first
-  for (const a of highPriority) addLink(a, 0);
-  // Then all other links
-  for (const a of allAnchors) addLink(a, 1);
-
-  // Sort by priority (nav/header/footer first)
-  prioritized.sort((a, b) => a.priority - b.priority);
-  return prioritized.map((p) => p.url);
-}
-
-// --- axe-core auditing ---
-function auditHtml(html) {
+function streamResults() {
   return new Promise((resolve) => {
-    // Remove scripts from fetched HTML to prevent execution
-    const cleaned = html.replace(/<script[\s\S]*?<\/script>/gi, "");
+    const es = new EventSource(`${API}/events`);
 
-    frame.srcdoc = cleaned;
+    es.addEventListener("status", (e) => {
+      const d = JSON.parse(e.data);
+      addEntry(escHtml(d.message), "status");
+    });
 
-    let settled = false;
-    function done(val) {
-      if (settled) return;
-      settled = true;
-      resolve(val);
-    }
+    es.addEventListener("page-start", (e) => {
+      const d = JSON.parse(e.data);
+      progressText.textContent = `page ${d.pageIndex} — ${d.url}`;
+      addEntry(`<strong>${d.pageIndex}:</strong> <span class="url">${escHtml(d.url)}</span>`, "status");
+    });
 
-    frame.onload = async () => {
-      try {
-        // Inject axe-core into the iframe so it can inspect its own document
-        const iframeDoc = frame.contentDocument;
-        if (!iframeDoc || !iframeDoc.body) { done([]); return; }
+    es.addEventListener("page-audit", (e) => {
+      const d = JSON.parse(e.data);
+      addEntry(`${d.viewport}: ${d.violationCount} violations, ${d.passCount} passed`, "status");
+    });
 
-        const script = iframeDoc.createElement("script");
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.9.1/axe.min.js";
-        script.onload = async () => {
-          try {
-            const iframeAxe = frame.contentWindow.axe;
-            const results = await iframeAxe.run(iframeDoc, {
-              runOnly: {
-                type: "tag",
-                values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"],
-              },
-            });
-            done(results.violations);
-          } catch (err) {
-            done([]);
-          }
-        };
-        script.onerror = () => done([]);
-        iframeDoc.head.appendChild(script);
-      } catch (err) {
-        done([]);
-      }
-    };
-    frame.onerror = () => done([]);
-    setTimeout(() => done([]), 20000);
+    es.addEventListener("violation", (e) => {
+      const d = JSON.parse(e.data);
+      counts.total++;
+      counts[d.impact] = (counts[d.impact] || 0) + 1;
+      updateCounters();
+
+      const v = {
+        url: d.url,
+        viewport: d.viewport,
+        impact: d.impact,
+        ruleId: d.ruleId,
+        help: d.help,
+        helpUrl: d.helpUrl,
+        wcagTags: d.wcagTags || [],
+        target: d.target,
+        html: d.html,
+      };
+      allViolations.push(v);
+      addViolation(v);
+    });
+
+    es.addEventListener("page-error", (e) => {
+      const d = JSON.parse(e.data);
+      addEntry(`error on ${escHtml(d.url)} (${d.viewport}): ${escHtml(d.error)}`, "error");
+    });
+
+    es.addEventListener("complete", (e) => {
+      const d = JSON.parse(e.data);
+      spinnerEl.style.display = "none";
+      progressText.textContent = `complete — ${d.totalPages} pages, ${d.totalViolations} violations`;
+      addEntry(`<strong>audit complete.</strong> ${d.totalPages} pages, ${d.totalViolations} violations.`, "status");
+      exportJson.disabled = false;
+      exportCsv.disabled = false;
+      es.close();
+      resolve();
+    });
+
+    es.addEventListener("error", () => {
+      es.close();
+      spinnerEl.style.display = "none";
+      progressText.textContent = "connection lost";
+      resolve();
+    });
   });
-}
-
-// --- URL rewriting ---
-function rewriteUrls(html, pageUrl) {
-  const base = new URL(pageUrl);
-  // Inject a <base> tag so relative URLs resolve correctly
-  return html.replace(/<head([^>]*)>/i, `<head$1><base href="${escAttr(base.origin + base.pathname)}">`);
-}
-
-function isBlockedPage(html) {
-  const lower = html.toLowerCase();
-  return (
-    (lower.includes("just a moment") && lower.includes("cf-chl")) ||
-    lower.includes("challenge-platform") ||
-    lower.includes("_cf_chl_opt") ||
-    (lower.includes("captcha") && lower.includes("challenge")) ||
-    (lower.includes("please wait") && lower.includes("checking your browser"))
-  );
-}
-
-function normalizeUrl(url) {
-  try {
-    const u = new URL(url);
-    u.hash = "";
-    return u.origin + u.pathname.replace(/\/+$/, "");
-  } catch (_) {
-    return url;
-  }
 }
 
 // --- UI ---
@@ -704,16 +511,19 @@ function addViolation(v) {
   const div = document.createElement("div");
   div.className = `entry violation ${v.impact}`;
   div.dataset.impact = v.impact;
+  div.dataset.viewport = v.viewport || "";
+  const show = filters[v.impact] !== false && (!v.viewport || filters[v.viewport] !== false);
   div.innerHTML = `
     <span class="impact">${v.impact}</span>
     <span class="rule">${escHtml(v.ruleId)}</span>
+    ${v.viewport ? `<span style="font-size:0.65rem;border:1px solid var(--border);padding:0.02rem 0.25rem;border-radius:2px;margin-left:0.25rem">${v.viewport}</span>` : ""}
     — ${escHtml(v.help)}
     <br><span class="target">${escHtml(v.target)}</span>
     <br><span class="url">${escHtml(v.url)}</span>
     ${v.helpUrl ? ` &middot; <a href="${escAttr(v.helpUrl)}" target="_blank" rel="noopener">docs</a>` : ""}
-    ${v.wcagTags.length ? ` &middot; <span class="url">${escHtml(v.wcagTags.join(", "))}</span>` : ""}
+    ${v.wcagTags && v.wcagTags.length ? ` &middot; <span class="url">${escHtml(v.wcagTags.join(", "))}</span>` : ""}
   `;
-  if (!filters[v.impact]) div.style.display = "none";
+  if (!show) div.style.display = "none";
   logEl.appendChild(div);
   if (autoScroll) div.scrollIntoView({ behavior: "smooth", block: "end" });
 }
@@ -731,9 +541,9 @@ exportJson.addEventListener("click", () => {
 
 exportCsv.addEventListener("click", () => {
   if (!allViolations.length) return;
-  const header = "url,impact,ruleId,help,target,wcagTags,helpUrl\n";
+  const header = "url,viewport,impact,ruleId,help,target,wcagTags,helpUrl\n";
   const rows = allViolations.map((v) =>
-    [v.url, v.impact, v.ruleId,
+    [v.url, v.viewport || "", v.impact, v.ruleId,
      `"${(v.help || "").replace(/"/g, '""')}"`,
      `"${(v.target || "").replace(/"/g, '""')}"`,
      `"${(v.wcagTags || []).join("; ")}"`,
