@@ -2,8 +2,6 @@
 
 An automated accessibility auditor that checks web pages against WCAG 2.1 AA standards. Runs entirely on GitHub Actions — no local setup required.
 
-**Dashboard:** [zmuhls.github.io/a11y-checker](https://zmuhls.github.io/a11y-checker/)
-
 ## What it does
 
 - **Checks any website for accessibility issues** — enter a URL and the tool crawls up to 50 pages, flagging problems that affect screen readers, keyboard navigation, color contrast, missing alt text, form labels, and more
