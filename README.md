@@ -2,7 +2,7 @@
 
 An automated accessibility auditor that checks web pages against WCAG 2.1 AA standards. Runs entirely in the browser — no install, no server, no configuration.
 
-**Use it now:** [zmuhls.github.io/a11y-checker](https://zmuhls.github.io/a11y-checker/)
+**Use it now:** [milwrite.github.io/a11y-checker](https://milwrite.github.io/a11y-checker/)
 
 ## What it does
 
@@ -14,7 +14,7 @@ An automated accessibility auditor that checks web pages against WCAG 2.1 AA sta
 
 ## How it works
 
-1. Go to [zmuhls.github.io/a11y-checker](https://zmuhls.github.io/a11y-checker/)
+1. Go to [milwrite.github.io/a11y-checker](https://milwrite.github.io/a11y-checker/)
 2. Enter a URL
 3. Results stream in as pages are crawled and audited
 
