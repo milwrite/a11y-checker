@@ -9,18 +9,19 @@
 <style>
   :root {
     --critical: #ff4444;
-    --serious: #cc7a00;
-    --moderate: #b8960c;
-    --minor: #4488cc;
+    --serious: #e39a22;
+    --moderate: #d2b43a;
+    --minor: #6fb1ff;
     --bg: #0a0a0a;
-    --surface: #111111;
-    --grid: #1a1a1a;
-    --border: #222222;
-    --text: #d0d0d0;
-    --muted: #666666;
+    --surface: #141414;
+    --grid: #242424;
+    --border: #3a3a3a;
+    --text: #ebebeb;
+    --muted: #b3b3b3;
     --accent: #ffffff;
-    --dim: #333333;
-    --green: #44aa44;
+    --dim: #8f8f8f;
+    --green: #63c174;
+    --focus: #8fc3ff;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -126,7 +127,10 @@
     outline: none;
   }
 
-  .url-form input[type="url"]:focus { border-color: var(--dim); }
+  .url-form input[type="url"]:focus {
+    border-color: var(--focus);
+    box-shadow: 0 0 0 2px rgba(143, 195, 255, 0.18);
+  }
   .url-form input[type="url"]::placeholder { color: var(--muted); }
 
   .page-limit {
@@ -150,7 +154,10 @@
     margin: 0;
   }
 
-  .page-limit:focus { border-color: var(--dim); }
+  .page-limit:focus {
+    border-color: var(--focus);
+    box-shadow: 0 0 0 2px rgba(143, 195, 255, 0.18);
+  }
 
   .url-form button {
     padding: 0.6rem 1.4rem;
@@ -178,11 +185,9 @@
   /* --- DASHBOARD --- */
   .dashboard { display: none; }
   .dashboard.active {
-    display: grid;
-    grid-template-rows: auto auto auto minmax(0, 1fr);
-    gap: 0;
-    flex: 1;
-    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
   }
 
   .progress {
@@ -262,7 +267,7 @@
     transition: opacity 0.15s;
   }
 
-  .toggle.off { opacity: 0.3; }
+  .toggle.off { opacity: 0.55; }
   .toggle input { display: none; }
   .spacer { flex: 1; }
 
@@ -282,18 +287,113 @@
   button.export-btn:hover { border-color: var(--muted); }
   button.export-btn:disabled { opacity: 0.3; cursor: default; }
 
+  .log-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.9rem 1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .panel-title {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+
+  .panel-subtitle {
+    font-size: 0.73rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
+
   #log {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    min-height: 16rem;
-    max-height: min(68vh, 52rem);
+    max-height: min(28rem, 38vh);
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
     padding-right: 0.15rem;
     padding-bottom: 0.35rem;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .analysis-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.9rem 1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .analysis-body {
+    max-height: min(24rem, 34vh);
+    overflow-y: auto;
+    padding-right: 0.15rem;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .analysis-body p,
+  .analysis-body ul,
+  .analysis-body ol,
+  .analysis-body h2,
+  .analysis-body h3 {
+    margin-bottom: 0.8rem;
+  }
+
+  .analysis-body ul,
+  .analysis-body ol {
+    padding-left: 1.2rem;
+  }
+
+  .analysis-body li {
+    margin-bottom: 0.45rem;
+  }
+
+  .analysis-body h2,
+  .analysis-body h3 {
+    font-size: 0.82rem;
+    color: var(--accent);
+  }
+
+  .analysis-body hr {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 1rem 0;
+  }
+
+  .analysis-body code {
+    background: var(--bg);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+  }
+
+  .analysis-body strong {
+    color: var(--accent);
+  }
+
+  .analysis-empty {
+    color: var(--muted);
+    font-size: 0.78rem;
   }
 
   .entry {
@@ -309,8 +409,8 @@
   .entry.serious { border-left-color: var(--serious); }
   .entry.moderate { border-left-color: var(--moderate); }
   .entry.minor { border-left-color: var(--minor); }
-  .entry.status { border-left-color: var(--green); color: var(--muted); }
-  .entry.error { border-left-color: var(--critical); color: #cc6666; }
+  .entry.status { border-left-color: var(--green); color: var(--text); }
+  .entry.error { border-left-color: var(--critical); color: #ff8f8f; }
 
   .entry .impact {
     display: inline-block;
@@ -357,8 +457,12 @@
 
   .entry .url { color: var(--muted); }
   .entry .rule { font-weight: 600; color: var(--accent); }
-  .entry a { color: var(--minor); text-decoration: none; }
-  .entry a:hover { text-decoration: underline; }
+  .entry a {
+    color: var(--minor);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+  .entry a:hover { color: #a8d0ff; }
   .entry .target { color: var(--muted); font-size: 0.72rem; }
 
   .page-record {
@@ -445,6 +549,7 @@
   }
 
   @media (max-width: 600px) {
+    .dashboard.active { gap: 0.7rem; }
     .app-header h1 { font-size: 1.3rem; }
     .app { padding: 1.5rem 1rem; }
     .url-form { flex-direction: column; }
@@ -466,11 +571,24 @@
       width: 100%;
       min-height: 2.5rem;
     }
+    .log-panel {
+      padding: 0.8rem 0.85rem 0.85rem;
+    }
+    .analysis-panel {
+      padding: 0.85rem 0.85rem 0.9rem;
+    }
+    .panel-header {
+      gap: 0.45rem;
+    }
+    .panel-subtitle {
+      font-size: 0.69rem;
+    }
     #log {
-      min-height: 50vh;
-      max-height: none;
-      height: min(60dvh, 34rem);
+      max-height: min(38dvh, 23rem);
       padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+    .analysis-body {
+      max-height: min(42dvh, 26rem);
     }
     footer {
       margin-top: 1.5rem;
@@ -482,8 +600,10 @@
       padding: 1.75rem 1.25rem;
     }
     #log {
-      min-height: 20rem;
-      max-height: min(62vh, 44rem);
+      max-height: min(30rem, 40vh);
+    }
+    .analysis-body {
+      max-height: min(28rem, 38vh);
     }
   }
 </style>
@@ -532,7 +652,29 @@
       </div>
     </div>
 
-    <div id="log"></div>
+    <section class="log-panel" aria-live="polite">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Audit log</div>
+          <p class="panel-subtitle">Scrollable grouped findings and per-page crawl results.</p>
+        </div>
+        <span class="meta-chip" id="log-status">live</span>
+      </div>
+      <div id="log"></div>
+    </section>
+
+    <section class="analysis-panel" id="analysis-panel" aria-live="polite">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Remediation summary</div>
+          <p class="panel-subtitle">AI follow-up that translates the audit into concrete next steps for nontechnical stakeholders.</p>
+        </div>
+        <span class="meta-chip" id="analysis-model">pending</span>
+      </div>
+      <div class="analysis-body" id="analysis-body">
+        <p class="analysis-empty">Run an audit to generate a plain-language remediation plan.</p>
+      </div>
+    </section>
   </div>
 
   <footer>
@@ -557,6 +699,9 @@ const spinnerEl = document.getElementById("spinner");
 const logEl = document.getElementById("log");
 const exportJson = document.getElementById("export-json");
 const exportCsv = document.getElementById("export-csv");
+const analysisBody = document.getElementById("analysis-body");
+const analysisModel = document.getElementById("analysis-model");
+const logStatus = document.getElementById("log-status");
 
 const counts = { total: 0, critical: 0, serious: 0, moderate: 0, minor: 0 };
 const filters = { critical: true, serious: true, moderate: true, minor: true, desktop: true, mobile: true };
@@ -603,6 +748,8 @@ urlForm.addEventListener("submit", async (e) => {
   updateCounters();
   exportJson.disabled = true;
   exportCsv.disabled = true;
+  logStatus.textContent = "live";
+  resetAnalysis();
   dashboardEl.classList.add("active");
   spinnerEl.style.display = "";
   progressText.textContent = `connecting to server for up to ${maxPages} pages...`;
@@ -683,11 +830,14 @@ function streamResults() {
 
     es.addEventListener("complete", (e) => {
       const d = JSON.parse(e.data);
+      reconcileCompletedReport(d);
       spinnerEl.style.display = "none";
-      progressText.textContent = `complete — ${d.totalPages} pages, ${groupedViolations.size} grouped issues across ${d.totalViolations} failing nodes`;
-      addEntry(`<strong>audit complete.</strong> ${d.totalPages} pages, ${groupedViolations.size} grouped issues across ${d.totalViolations} failing nodes.`, "status");
+      progressText.textContent = `complete — ${d.totalPages} pages, ${counts.total} grouped issues across ${d.totalViolations} failing nodes`;
+      addEntry(`<strong>audit complete.</strong> ${d.totalPages} pages, ${counts.total} grouped issues across ${d.totalViolations} failing nodes.`, "status");
       exportJson.disabled = false;
       exportCsv.disabled = false;
+      logStatus.textContent = "complete";
+      analyzeReport();
       es.close();
       resolve();
     });
@@ -696,9 +846,36 @@ function streamResults() {
       es.close();
       spinnerEl.style.display = "none";
       progressText.textContent = "connection lost";
+      logStatus.textContent = "disconnected";
       resolve();
     });
   });
+}
+
+async function analyzeReport() {
+  analysisModel.textContent = "analyzing";
+  analysisBody.innerHTML = `<p class="analysis-empty">Generating a remediation summary from the completed audit...</p>`;
+
+  try {
+    const res = await fetch(`${API}/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Analysis request failed");
+
+    analysisModel.textContent = data.model || "ready";
+    analysisBody.innerHTML = renderMarkdown(data.analysis || "");
+  } catch (err) {
+    analysisModel.textContent = "unavailable";
+    analysisBody.innerHTML = `<p class="analysis-empty">Could not generate the remediation summary: ${escHtml(err.message)}</p>`;
+  }
+}
+
+function resetAnalysis() {
+  analysisModel.textContent = "pending";
+  analysisBody.innerHTML = `<p class="analysis-empty">Run an audit to generate a plain-language remediation plan.</p>`;
 }
 
 // --- UI ---
@@ -807,6 +984,51 @@ function recordPageError(data) {
 function finalizePageRecord(data) {
   const record = ensurePageRecord({ pageIndex: data.pageIndex, url: data.url, depth: data.depth, state: "done" });
   renderPageRecord(record);
+}
+
+function reconcileCompletedReport(report) {
+  if (!report || !Array.isArray(report.violations)) return;
+
+  logEl.querySelectorAll(".entry.violation").forEach((el) => el.remove());
+  groupedViolations.clear();
+  allViolations.length = 0;
+  counts.total = counts.critical = counts.serious = counts.moderate = counts.minor = 0;
+
+  for (const record of pageRecords.values()) {
+    record.groupedIssueCount = 0;
+    record.nodeCount = 0;
+    record.issuesEl.innerHTML = "";
+    if (record.state !== "error") {
+      record.state = "done";
+    }
+    renderPageRecord(record);
+  }
+
+  for (const violation of report.violations) {
+    const normalized = {
+      pageIndex: violation.pageIndex,
+      url: violation.url,
+      viewport: violation.viewport,
+      impact: violation.impact,
+      ruleId: violation.ruleId,
+      help: violation.help,
+      helpUrl: violation.helpUrl,
+      wcagTags: violation.wcagTags || [],
+      target: violation.target,
+      html: violation.html,
+    };
+    allViolations.push(normalized);
+    upsertViolationGroup(normalized);
+  }
+
+  for (const record of pageRecords.values()) {
+    if (record.state !== "error") {
+      record.state = "done";
+    }
+    renderPageRecord(record);
+  }
+
+  updateCounters();
 }
 
 function upsertViolationGroup(v) {
@@ -922,6 +1144,74 @@ function escHtml(s) {
 
 function escAttr(s) {
   return (s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function renderMarkdown(md) {
+  const lines = (md || "").replace(/\r/g, "").split("\n");
+  let html = "";
+  let inList = false;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) {
+      if (inList) {
+        html += "</ul>";
+        inList = false;
+      }
+      continue;
+    }
+
+    if (line.startsWith("## ")) {
+      if (inList) {
+        html += "</ul>";
+        inList = false;
+      }
+      html += `<h2>${inlineMarkdown(line.slice(3))}</h2>`;
+      continue;
+    }
+
+    if (line.startsWith("### ")) {
+      if (inList) {
+        html += "</ul>";
+        inList = false;
+      }
+      html += `<h3>${inlineMarkdown(line.slice(4))}</h3>`;
+      continue;
+    }
+
+    if (line === "---") {
+      if (inList) {
+        html += "</ul>";
+        inList = false;
+      }
+      html += "<hr>";
+      continue;
+    }
+
+    if (line.startsWith("- ") || line.startsWith("* ")) {
+      if (!inList) {
+        html += "<ul>";
+        inList = true;
+      }
+      html += `<li>${inlineMarkdown(line.slice(2))}</li>`;
+      continue;
+    }
+
+    if (inList) {
+      html += "</ul>";
+      inList = false;
+    }
+    html += `<p>${inlineMarkdown(line)}</p>`;
+  }
+
+  if (inList) html += "</ul>";
+  return html || `<p class="analysis-empty">No remediation summary was returned.</p>`;
+}
+
+function inlineMarkdown(text) {
+  return escHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/`(.+?)`/g, "<code>$1</code>");
 }
 </script>
 </body>
