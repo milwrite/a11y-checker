@@ -31,16 +31,22 @@
     color: var(--text);
     line-height: 1.5;
     min-height: 100vh;
+    min-height: 100dvh;
     background-image:
       linear-gradient(var(--grid) 1px, transparent 1px),
       linear-gradient(90deg, var(--grid) 1px, transparent 1px);
     background-size: 40px 40px;
+    overflow-x: hidden;
   }
 
   .app {
     max-width: 960px;
     margin: 0 auto;
     padding: 2rem 1.5rem;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
   }
 
   .app-header {
@@ -171,7 +177,13 @@
 
   /* --- DASHBOARD --- */
   .dashboard { display: none; }
-  .dashboard.active { display: block; }
+  .dashboard.active {
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+  }
 
   .progress {
     padding: 0.5rem 0.75rem;
@@ -274,8 +286,14 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    max-height: 65vh;
+    min-height: 16rem;
+    max-height: min(68vh, 52rem);
     overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    padding-right: 0.15rem;
+    padding-bottom: 0.35rem;
+    -webkit-overflow-scrolling: touch;
   }
 
   .entry {
@@ -433,6 +451,40 @@
     .url-form input[type="url"] { border-right: 1px solid var(--border); border-radius: 4px 4px 0 0; }
     .page-limit { width: 100%; border-right: 1px solid var(--border); border-top: none; }
     .url-form button { border-radius: 0 0 4px 4px; }
+    .toolbar {
+      align-items: stretch;
+    }
+    .spacer {
+      display: none;
+    }
+    .export-group {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    button.export-btn {
+      width: 100%;
+      min-height: 2.5rem;
+    }
+    #log {
+      min-height: 50vh;
+      max-height: none;
+      height: min(60dvh, 34rem);
+      padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+    footer {
+      margin-top: 1.5rem;
+    }
+  }
+
+  @media (min-width: 601px) and (max-width: 960px) {
+    .app {
+      padding: 1.75rem 1.25rem;
+    }
+    #log {
+      min-height: 20rem;
+      max-height: min(62vh, 44rem);
+    }
   }
 </style>
 </head>
