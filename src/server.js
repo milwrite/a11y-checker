@@ -22,6 +22,15 @@ function cors(res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
+function corsHeaders(extra = {}) {
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    ...extra,
+  };
+}
+
 function loadEnvFile(filePath) {
   try {
     const raw = fs.readFileSync(filePath, "utf8");
@@ -317,18 +326,18 @@ const server = http.createServer((req, res) => {
 
   if (req.url === "/analyze" && req.method === "POST") {
     if (!finalReport) {
-      res.writeHead(409, { "Content-Type": "application/json" });
+      res.writeHead(409, corsHeaders({ "Content-Type": "application/json" }));
       res.end(JSON.stringify({ error: "No completed audit available yet" }));
       return;
     }
 
     analyzeReportWithOpenRouter(finalReport)
       .then((result) => {
-        res.writeHead(200, { "Content-Type": "application/json" });
+        res.writeHead(200, corsHeaders({ "Content-Type": "application/json" }));
         res.end(JSON.stringify(result));
       })
       .catch((err) => {
-        res.writeHead(502, { "Content-Type": "application/json" });
+        res.writeHead(502, corsHeaders({ "Content-Type": "application/json" }));
         res.end(JSON.stringify({ error: err.message }));
       });
     return;
