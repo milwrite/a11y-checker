@@ -663,7 +663,7 @@
       <div id="log"></div>
     </section>
 
-    <section class="analysis-panel" id="analysis-panel" aria-live="polite">
+    <section class="analysis-panel" id="analysis-panel" aria-live="polite" style="display:none">
       <div class="panel-header">
         <div>
           <div class="panel-title">Remediation summary</div>
@@ -856,8 +856,7 @@ function streamResults() {
 }
 
 async function analyzeReport() {
-  analysisModel.textContent = "analyzing";
-  analysisBody.innerHTML = `<p class="analysis-empty">Generating a remediation summary from the completed audit...</p>`;
+  const panel = document.getElementById("analysis-panel");
 
   try {
     const res = await fetch(`${API}/analyze`, {
@@ -870,15 +869,18 @@ async function analyzeReport() {
 
     analysisModel.textContent = data.model || "ready";
     analysisBody.innerHTML = renderMarkdown(data.analysis || "");
-  } catch (err) {
-    analysisModel.textContent = "unavailable";
-    analysisBody.innerHTML = `<p class="analysis-empty">Could not generate the remediation summary: ${escHtml(err.message)}</p>`;
+    panel.style.display = "";
+  } catch (_) {
+    // silently hide panel on failure
+    panel.style.display = "none";
   }
 }
 
 function resetAnalysis() {
+  const panel = document.getElementById("analysis-panel");
+  panel.style.display = "none";
   analysisModel.textContent = "pending";
-  analysisBody.innerHTML = `<p class="analysis-empty">Run an audit to generate a plain-language remediation plan.</p>`;
+  analysisBody.innerHTML = "";
 }
 
 // --- UI ---
