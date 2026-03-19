@@ -1061,7 +1061,7 @@ function upsertViolationGroup(v) {
     updateCounters();
 
     record.issuesEl.appendChild(el);
-    if (autoScroll) el.scrollIntoView({ behavior: "smooth", block: "end" });
+    if (autoScroll && record.detailsEl.open) el.scrollIntoView({ behavior: "smooth", block: "end" });
   }
 
   group.count++;
