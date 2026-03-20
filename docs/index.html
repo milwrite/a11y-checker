@@ -522,6 +522,40 @@
     color: var(--dim);
   }
 
+  .export-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.9rem 1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .export-bar-title {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+
+  .export-bar-hint {
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .export-bar-btns {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .export-btn-lg {
+    padding: 0.35rem 0.9rem;
+    font-size: 0.78rem;
+  }
+
   footer {
     margin-top: 3rem;
     padding-top: 1.5rem;
@@ -634,19 +668,20 @@
       <label class="toggle" data-filter="moderate"><input type="checkbox" checked>moderate</label>
       <label class="toggle" data-filter="minor"><input type="checkbox" checked>minor</label>
       <span class="spacer"></span>
-      <div class="export-group">
-        <button class="export-btn" id="export-json" disabled>JSON</button>
-        <button class="export-btn" id="export-csv" disabled>CSV</button>
-      </div>
+      <button class="export-btn" id="toggle-log-btn">hide log</button>
     </div>
 
-    <section class="log-panel" aria-live="polite">
+    <section class="log-panel" id="log-panel" aria-live="polite">
       <div class="panel-header">
         <div>
           <div class="panel-title">Audit log</div>
-          <p class="panel-subtitle">Scrollable grouped findings and per-page crawl results.</p>
+          <p class="panel-subtitle" id="log-subtitle">Grouped findings per page. Click a page row to expand.</p>
         </div>
-        <span class="meta-chip" id="log-status">live</span>
+        <div style="display:flex;gap:0.3rem;align-items:center;">
+          <button class="export-btn" id="expand-all-btn" style="display:none">expand all</button>
+          <button class="export-btn" id="collapse-all-btn" style="display:none">collapse all</button>
+          <span class="meta-chip" id="log-status">live</span>
+        </div>
       </div>
       <div id="log"></div>
     </section>
@@ -655,13 +690,24 @@
       <div class="panel-header">
         <div>
           <div class="panel-title">Remediation summary</div>
-          <p class="panel-subtitle">AI follow-up that translates the audit into concrete next steps for nontechnical stakeholders.</p>
+          <p class="panel-subtitle">AI-generated plain-language remediation plan for nontechnical stakeholders.</p>
         </div>
         <span class="meta-chip" id="analysis-model">pending</span>
       </div>
       <div class="analysis-body" id="analysis-body">
         <p class="analysis-empty">Run an audit to generate a plain-language remediation plan.</p>
       </div>
+    </section>
+
+    <section class="export-bar" id="export-bar" style="display:none">
+      <div class="export-bar-title">Download results</div>
+      <p class="export-bar-hint">Save raw data for developers, or generate a human-readable report for stakeholders.</p>
+      <div class="export-bar-btns">
+        <button class="export-btn export-btn-lg" id="export-json">↓ JSON</button>
+        <button class="export-btn export-btn-lg" id="export-csv">↓ CSV</button>
+        <button class="export-btn export-btn-lg" id="export-md">↓ Markdown report</button>
+      </div>
+      <p class="export-bar-hint">JSON and CSV contain every violation node. The Markdown report is a human-readable summary suitable for filing tickets or sharing with clients.</p>
     </section>
   </div>
 
@@ -687,9 +733,15 @@ const spinnerEl = document.getElementById("spinner");
 const logEl = document.getElementById("log");
 const exportJson = document.getElementById("export-json");
 const exportCsv = document.getElementById("export-csv");
+const exportMd = document.getElementById("export-md");
+const exportBar = document.getElementById("export-bar");
 const analysisBody = document.getElementById("analysis-body");
 const analysisModel = document.getElementById("analysis-model");
 const logStatus = document.getElementById("log-status");
+const logPanel = document.getElementById("log-panel");
+const toggleLogBtn = document.getElementById("toggle-log-btn");
+const expandAllBtn = document.getElementById("expand-all-btn");
+const collapseAllBtn = document.getElementById("collapse-all-btn");
 
 const counts = { total: 0, critical: 0, serious: 0, moderate: 0, minor: 0 };
 const filters = { critical: true, serious: true, moderate: true, minor: true, desktop: true, mobile: true };
@@ -737,7 +789,11 @@ urlForm.addEventListener("submit", async (e) => {
   pageRecords.clear();
   updateCounters();
   exportJson.disabled = true;
-  exportCsv.disabled = true;
+  exportBar.style.display = "none";
+  logPanel.style.display = "";
+  toggleLogBtn.textContent = "hide log";
+  expandAllBtn.style.display = "none";
+  collapseAllBtn.style.display = "none";
   logStatus.textContent = "live";
   resetAnalysis();
   dashboardEl.classList.add("active");
@@ -776,6 +832,11 @@ function streamResults() {
 
     es.addEventListener("status", (e) => {
       const d = JSON.parse(e.data);
+      // Suppress noisy "Queued N pages" messages from log — show in progress only
+      if (/^Queued \d+ pages?\s/i.test(d.message) || /^Added \d+ sitemap/i.test(d.message)) {
+        progressText.textContent = d.message;
+        return;
+      }
       addEntry(escHtml(d.message), "status");
     });
 
@@ -825,9 +886,10 @@ function streamResults() {
       spinnerEl.style.display = "none";
       progressText.textContent = `complete — ${d.totalPages} pages, ${counts.total} grouped issues across ${d.totalViolations} failing nodes`;
       addEntry(`<strong>audit complete.</strong> ${d.totalPages} pages, ${counts.total} grouped issues across ${d.totalViolations} failing nodes.`, "status");
-      exportJson.disabled = false;
-      exportCsv.disabled = false;
+      exportBar.style.display = "";
       logStatus.textContent = "complete";
+      expandAllBtn.style.display = "";
+      collapseAllBtn.style.display = "";
       analyzeReport();
       es.close();
       resolve();
@@ -942,14 +1004,15 @@ function renderPageRecord(record) {
     `<span class="meta-chip">${escHtml(viewport)} ${stat.violationCount}v / ${stat.passCount}p</span>`
   ).join("");
 
+  const stateLabel = record.state === "done" ? "✓" : record.state === "error" ? "✗" : "…";
   record.summaryEl.innerHTML = `
     <div class="page-summary-top">
-      <span class="page-summary-label">p${record.pageIndex}</span>
+      <span class="page-summary-label">page ${record.pageIndex}</span>
+      <span class="meta-chip">${stateLabel}</span>
+      ${typeof record.depth === "number" ? `<span class="meta-chip">depth ${record.depth}</span>` : ""}
+      <span class="meta-chip">${record.groupedIssueCount} issue${record.groupedIssueCount === 1 ? "" : "s"}</span>
+      <span class="meta-chip">${record.nodeCount} node${record.nodeCount === 1 ? "" : "s"}</span>
       <span class="page-summary-url">${escHtml(record.url || "")}</span>
-      <span class="meta-chip">${escHtml(record.state)}</span>
-      ${typeof record.depth === "number" ? `<span class="meta-chip">d${record.depth}</span>` : ""}
-      <span class="meta-chip">${record.groupedIssueCount}g</span>
-      <span class="meta-chip">${record.nodeCount}n</span>
     </div>
   `;
 
@@ -1092,6 +1155,21 @@ function renderViolationGroup(group) {
   else group.el.style.display = "";
 }
 
+// --- Log toggle / expand / collapse ---
+toggleLogBtn.addEventListener("click", () => {
+  const hidden = logEl.style.display === "none";
+  logEl.style.display = hidden ? "" : "none";
+  toggleLogBtn.textContent = hidden ? "hide log" : "show log";
+});
+
+expandAllBtn.addEventListener("click", () => {
+  logEl.querySelectorAll("details.page-record").forEach((d) => d.setAttribute("open", ""));
+});
+
+collapseAllBtn.addEventListener("click", () => {
+  logEl.querySelectorAll("details.page-record").forEach((d) => d.removeAttribute("open"));
+});
+
 // --- Export ---
 exportJson.addEventListener("click", () => {
   if (!allViolations.length) return;
@@ -1115,6 +1193,68 @@ exportCsv.addEventListener("click", () => {
      `"${(v.wcagUrls || []).join("; ")}"`].join(",")
   ).join("\n");
   downloadBlob(header + rows, "a11y-report.csv", "text/csv");
+});
+
+exportMd.addEventListener("click", () => {
+  if (!allViolations.length) return;
+
+  const IMPACT_ORDER = { critical: 0, serious: 1, moderate: 2, minor: 3 };
+  const grouped = new Map();
+  for (const v of allViolations) {
+    const key = v.ruleId;
+    if (!grouped.has(key)) {
+      grouped.set(key, { ruleId: v.ruleId, impact: v.impact, help: v.help, helpUrl: v.helpUrl, wcagTags: v.wcagTags || [], pages: new Set(), nodes: 0 });
+    }
+    const g = grouped.get(key);
+    g.pages.add(v.url);
+    g.nodes++;
+  }
+
+  const rules = [...grouped.values()].sort((a, b) =>
+    (IMPACT_ORDER[a.impact] ?? 9) - (IMPACT_ORDER[b.impact] ?? 9) || b.nodes - a.nodes
+  );
+
+  const pageCount = new Set(allViolations.map((v) => v.url)).size;
+  const date = new Date().toISOString().slice(0, 10);
+
+  let md = `# Accessibility Audit Report\n\n`;
+  md += `**Date:** ${date}  \n`;
+  md += `**Pages audited:** ${pageCount}  \n`;
+  md += `**Total failing nodes:** ${allViolations.length}  \n`;
+  md += `**Distinct rule violations:** ${rules.length}  \n\n`;
+  md += `---\n\n## Summary by severity\n\n`;
+
+  for (const impact of ["critical", "serious", "moderate", "minor"]) {
+    const rs = rules.filter((r) => r.impact === impact);
+    if (!rs.length) continue;
+    md += `### ${impact.charAt(0).toUpperCase() + impact.slice(1)} (${rs.length} rule${rs.length === 1 ? "" : "s"})\n\n`;
+    for (const r of rs) {
+      md += `- **${r.ruleId}** — ${r.help}  \n`;
+      md += `  Affects ${r.nodes} node${r.nodes === 1 ? "" : "s"} across ${r.pages.size} page${r.pages.size === 1 ? "" : "s"}.  \n`;
+      if (r.wcagTags.length) md += `  WCAG: ${r.wcagTags.join(", ")}  \n`;
+      if (r.helpUrl) md += `  [More info](${r.helpUrl})  \n`;
+      md += `\n`;
+    }
+  }
+
+  md += `---\n\n## Affected pages\n\n`;
+  const pageViolations = new Map();
+  for (const v of allViolations) {
+    if (!pageViolations.has(v.url)) pageViolations.set(v.url, []);
+    pageViolations.get(v.url).push(v);
+  }
+  for (const [url, vs] of [...pageViolations].sort((a, b) => b[1].length - a[1].length)) {
+    const ruleSet = new Set(vs.map((v) => v.ruleId));
+    md += `### ${url}\n\n`;
+    md += `${vs.length} failing node${vs.length === 1 ? "" : "s"}, ${ruleSet.size} distinct rule${ruleSet.size === 1 ? "" : "s"}\n\n`;
+    for (const ruleId of ruleSet) {
+      const ruleVs = vs.filter((v) => v.ruleId === ruleId);
+      md += `- **${ruleId}** (${ruleVs[0].impact}): ${ruleVs[0].help} — ${ruleVs.length} node${ruleVs.length === 1 ? "" : "s"}\n`;
+    }
+    md += `\n`;
+  }
+
+  downloadBlob(md, "a11y-report.md", "text/markdown");
 });
 
 function downloadBlob(content, filename, type) {
