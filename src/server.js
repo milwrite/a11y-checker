@@ -9,7 +9,6 @@ loadEnvFile(path.join(__dirname, "..", ".env"));
 const PORT = process.env.PORT || 3000;
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "";
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "minimax/minimax-m2.7";
 const docsDir = path.join(__dirname, "..", "docs");
 const clients = new Set();
@@ -337,7 +336,7 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    const researchPromise = OPENAI_API_KEY
+    const researchPromise = OPENROUTER_API_KEY
       ? researcher(finalReport.violations, {
           siteUrl: targetUrl,
           emit: (ev, d) => {
