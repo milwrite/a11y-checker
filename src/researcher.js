@@ -1,11 +1,9 @@
 // src/researcher.js
 // Post-audit LLM enrichment: groups violations by rule, samples representative
-// HTML, and asks an LLM for plain-language remediation playbooks.
+// HTML, and asks OpenAI for plain-language remediation playbooks.
 //
-// Supports OpenRouter, OpenAI, and Anthropic. Priority order:
-//   OPENROUTER_API_KEY (uses OPENROUTER_MODEL or openai/gpt-4o-mini by default)
-//   OPENAI_API_KEY     (uses RESEARCH_MODEL or gpt-4o-mini)
-//   ANTHROPIC_API_KEY  (uses RESEARCH_MODEL or claude-3-5-haiku-20241022)
+// Requires: OPENAI_API_KEY
+// Optional: RESEARCH_MODEL (default: gpt-4o-mini)
 //
 // Usage (from auditor complete event):
 //   const { researcher } = require('./researcher');
@@ -13,14 +11,12 @@
 
 const https = require("https");
 
-const DEFAULT_OPENROUTER_MODEL = "openai/gpt-4o-mini";
-const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
-const DEFAULT_ANTHROPIC_MODEL = "claude-3-5-haiku-20241022";
+const DEFAULT_MODEL = "gpt-4o-mini";
 const MAX_SAMPLES_PER_RULE = 3;
 const MAX_HTML_CHARS = 300;
-const MAX_RULES_PER_BATCH = 6; // rules per LLM call
+const MAX_RULES_PER_BATCH = 6;
 
-// ─── HTTP helpers ────────────────────────────────────────────────────────────
+// ─── HTTP helper ──────────────────────────────────────────────────────────────
 
 function postJson(hostname, path, headers, body) {
   return new Promise((resolve, reject) => {
@@ -56,10 +52,13 @@ function postJson(hostname, path, headers, body) {
   });
 }
 
-// ─── LLM backends ────────────────────────────────────────────────────────────
+// ─── OpenAI call ─────────────────────────────────────────────────────────────
 
 async function callOpenAI(systemPrompt, userPrompt) {
-  const model = process.env.RESEARCH_MODEL || DEFAULT_OPENAI_MODEL;
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("Set OPENAI_API_KEY to enable deep research.");
+  }
+  const model = process.env.RESEARCH_MODEL || DEFAULT_MODEL;
   const resp = await postJson(
     "api.openai.com",
     "/v1/chat/completions",
@@ -75,62 +74,6 @@ async function callOpenAI(systemPrompt, userPrompt) {
     }
   );
   return resp.choices[0].message.content;
-}
-
-async function callAnthropic(systemPrompt, userPrompt) {
-  const model = process.env.RESEARCH_MODEL || DEFAULT_ANTHROPIC_MODEL;
-  const resp = await postJson(
-    "api.anthropic.com",
-    "/v1/messages",
-    {
-      "x-api-key": process.env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
-    {
-      model,
-      max_tokens: 4096,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
-    }
-  );
-  return resp.content[0].text;
-}
-
-async function callOpenRouter(systemPrompt, userPrompt) {
-  const model =
-    process.env.RESEARCH_MODEL ||
-    process.env.OPENROUTER_MODEL ||
-    DEFAULT_OPENROUTER_MODEL;
-  const resp = await postJson(
-    "openrouter.ai",
-    "/api/v1/chat/completions",
-    {
-      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      "HTTP-Referer": "https://github.com/milwrite/a11y-checker",
-      "X-Title": "a11y-checker",
-    },
-    {
-      model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-    }
-  );
-  const content = resp?.choices?.[0]?.message?.content;
-  if (!content) throw new Error("OpenRouter returned empty content");
-  return content;
-}
-
-async function callLLM(systemPrompt, userPrompt) {
-  if (process.env.OPENROUTER_API_KEY) return callOpenRouter(systemPrompt, userPrompt);
-  if (process.env.ANTHROPIC_API_KEY) return callAnthropic(systemPrompt, userPrompt);
-  if (process.env.OPENAI_API_KEY) return callOpenAI(systemPrompt, userPrompt);
-  throw new Error(
-    "Set OPENROUTER_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY to enable deep research."
-  );
 }
 
 // ─── Grouping + sampling ─────────────────────────────────────────────────────
@@ -221,12 +164,11 @@ function buildUserPrompt(ruleGroups, siteUrl) {
 // ─── Batch runner ─────────────────────────────────────────────────────────────
 
 async function researchBatch(ruleGroups, siteUrl, emit) {
-  const prompt = buildUserPrompt(ruleGroups, siteUrl);
   emit?.("status", {
     message: `Researching ${ruleGroups.length} violation type(s)...`,
   });
 
-  const raw = await callLLM(SYSTEM_PROMPT, prompt);
+  const raw = await callOpenAI(SYSTEM_PROMPT, buildUserPrompt(ruleGroups, siteUrl));
 
   let parsed;
   try {

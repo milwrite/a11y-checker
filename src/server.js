@@ -9,6 +9,7 @@ loadEnvFile(path.join(__dirname, "..", ".env"));
 const PORT = process.env.PORT || 3000;
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "";
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "minimax/minimax-m2.7";
 const docsDir = path.join(__dirname, "..", "docs");
 const clients = new Set();
@@ -336,19 +337,23 @@ const server = http.createServer((req, res) => {
       return;
     }
 
+    const researchPromise = OPENAI_API_KEY
+      ? researcher(finalReport.violations, {
+          siteUrl: targetUrl,
+          emit: (ev, d) => {
+            if (ev === "status") console.log("[research]", d.message);
+          },
+        }).catch((err) => {
+          console.warn("Deep research failed:", err.message);
+          return [];
+        })
+      : Promise.resolve([]);
+
     Promise.all([
       analyzeReportWithOpenRouter(finalReport).catch((err) => ({
         error: err.message,
       })),
-      researcher(finalReport.violations, {
-        siteUrl: targetUrl,
-        emit: (ev, d) => {
-          if (ev === "status") console.log("[research]", d.message);
-        },
-      }).catch((err) => {
-        console.warn("Deep research failed:", err.message);
-        return [];
-      }),
+      researchPromise,
     ]).then(([narrative, deepResearch]) => {
       res.writeHead(200, corsHeaders({ "Content-Type": "application/json" }));
       res.end(JSON.stringify({ ...narrative, deepResearch }));
