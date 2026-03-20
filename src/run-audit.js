@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { Auditor } = require("./auditor");
+const { researcher } = require("./researcher");
 
 const rawUrls = process.argv[2];
 if (!rawUrls) {
@@ -27,35 +28,66 @@ const auditor = new Auditor((event, data) => {
   } else if (event === "complete") {
     console.log(`\nDone. ${data.totalPages} pages, ${data.totalViolations} violations.`);
 
-    const report = {
-      url,
-      timestamp: new Date().toISOString(),
-      totalPages: data.totalPages,
-      totalViolations: data.totalViolations,
-      violations: data.violations,
+    const hasResearchKey =
+      process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY;
+
+    const finish = (deepResearch) => {
+      const report = {
+        url,
+        timestamp: new Date().toISOString(),
+        totalPages: data.totalPages,
+        totalViolations: data.totalViolations,
+        violations: data.violations,
+        deepResearch,
+      };
+
+      const reportPath = path.join(outDir, "report.json");
+      fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+      console.log(`Report written to ${reportPath}`);
+
+      const indexPath = path.join(outDir, "index.json");
+      let index = [];
+      if (fs.existsSync(indexPath)) {
+        try { index = JSON.parse(fs.readFileSync(indexPath, "utf8")); } catch (_) {}
+      }
+      index.unshift({
+        url,
+        timestamp: report.timestamp,
+        totalPages: report.totalPages,
+        totalViolations: report.totalViolations,
+        hasDeepResearch: deepResearch.length > 0,
+        file: `report-${Date.now()}.json`,
+      });
+      index = index.slice(0, 20);
+
+      fs.copyFileSync(reportPath, path.join(outDir, index[0].file));
+      fs.writeFileSync(indexPath, JSON.stringify(index, null, 2));
+      console.log(`Index updated: ${index.length} reports`);
     };
 
-    const reportPath = path.join(outDir, "report.json");
-    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
-    console.log(`Report written to ${reportPath}`);
-
-    const indexPath = path.join(outDir, "index.json");
-    let index = [];
-    if (fs.existsSync(indexPath)) {
-      try { index = JSON.parse(fs.readFileSync(indexPath, "utf8")); } catch (_) {}
+    if (hasResearchKey) {
+      researcher(data.violations, {
+        siteUrl: url,
+        emit: (ev, d) => {
+          if (ev === "status") console.log("[research]", d.message);
+        },
+      })
+        .then((deepResearch) => {
+          console.log(
+            `Research complete: ${deepResearch.length} rule group(s) analyzed.`
+          );
+          finish(deepResearch);
+        })
+        .catch((err) => {
+          console.warn("Deep research failed:", err.message);
+          finish([]);
+        });
+    } else {
+      console.log(
+        "Deep research skipped (set ANTHROPIC_API_KEY or OPENAI_API_KEY to enable)."
+      );
+      finish([]);
     }
-    index.unshift({
-      url,
-      timestamp: report.timestamp,
-      totalPages: report.totalPages,
-      totalViolations: report.totalViolations,
-      file: `report-${Date.now()}.json`,
-    });
-    index = index.slice(0, 20);
-
-    fs.copyFileSync(reportPath, path.join(outDir, index[0].file));
-    fs.writeFileSync(indexPath, JSON.stringify(index, null, 2));
-    console.log(`Index updated: ${index.length} reports`);
   }
 }, { baseUrl: url, seedPaths });
 
