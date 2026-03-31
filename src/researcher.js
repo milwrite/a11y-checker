@@ -10,48 +10,12 @@
 //   const { researcher } = require('./researcher');
 //   const research = await researcher(violations, { siteUrl, emit });
 
-const https = require("https");
+const { postChatCompletion } = require("./openrouter");
 
 const DEFAULT_MODEL = "openai/gpt-4o-mini";
 const MAX_SAMPLES_PER_RULE = 3;
 const MAX_HTML_CHARS = 300;
 const MAX_RULES_PER_BATCH = 6;
-
-// ─── HTTP helper ──────────────────────────────────────────────────────────────
-
-function postJson(hostname, path, headers, body) {
-  return new Promise((resolve, reject) => {
-    const payload = JSON.stringify(body);
-    const req = https.request(
-      {
-        hostname,
-        path,
-        method: "POST",
-        headers: {
-          ...headers,
-          "Content-Type": "application/json",
-          "Content-Length": Buffer.byteLength(payload),
-        },
-      },
-      (res) => {
-        let data = "";
-        res.on("data", (c) => (data += c));
-        res.on("end", () => {
-          if (res.statusCode >= 400)
-            return reject(new Error(`HTTP ${res.statusCode}: ${data}`));
-          try {
-            resolve(JSON.parse(data));
-          } catch (e) {
-            reject(e);
-          }
-        });
-      }
-    );
-    req.on("error", reject);
-    req.write(payload);
-    req.end();
-  });
-}
 
 // ─── OpenRouter call ──────────────────────────────────────────────────────────
 
@@ -63,14 +27,7 @@ async function callLLM(systemPrompt, userPrompt) {
     process.env.RESEARCH_MODEL ||
     process.env.OPENROUTER_MODEL ||
     DEFAULT_MODEL;
-  const resp = await postJson(
-    "openrouter.ai",
-    "/api/v1/chat/completions",
-    {
-      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      "HTTP-Referer": "https://github.com/milwrite/a11y-checker",
-      "X-Title": "a11y-checker",
-    },
+  const resp = await postChatCompletion(
     {
       model,
       messages: [
@@ -79,6 +36,9 @@ async function callLLM(systemPrompt, userPrompt) {
       ],
       temperature: 0.2,
       response_format: { type: "json_object" },
+    },
+    {
+      apiKey: process.env.OPENROUTER_API_KEY,
     }
   );
   const content = resp?.choices?.[0]?.message?.content;

@@ -2,6 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const { Auditor } = require("./auditor");
+const { postChatCompletion } = require("./openrouter");
 const { researcher } = require("./researcher");
 
 loadEnvFile(path.join(__dirname, "..", ".env"));
@@ -163,18 +164,8 @@ async function analyzeReportWithOpenRouter(report) {
   }
 
   const compactReport = summarizeReport(report);
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 55000);
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    signal: controller.signal,
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-      "HTTP-Referer": "https://github.com/milwrite/a11y-checker",
-      "X-Title": "a11y-checker",
-    },
-    body: JSON.stringify({
+  const payload = await postChatCompletion(
+    {
       model: OPENROUTER_MODEL,
       temperature: 0.2,
       messages: [
@@ -205,15 +196,12 @@ async function analyzeReportWithOpenRouter(report) {
           ].join("\n"),
         },
       ],
-    }),
-  });
-
-  clearTimeout(timeout);
-  const payload = await response.json();
-  if (!response.ok) {
-    const message = payload?.error?.message || `OpenRouter request failed with ${response.status}`;
-    throw new Error(message);
-  }
+    },
+    {
+      apiKey: OPENROUTER_API_KEY,
+      timeout: 55000,
+    }
+  );
 
   const content = payload?.choices?.[0]?.message?.content;
   if (!content || typeof content !== "string") {
